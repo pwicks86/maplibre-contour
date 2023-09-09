@@ -3,6 +3,8 @@ import type Actor from "./actor";
 import { offscreenCanvasSupported } from "./utils";
 import type { MainThreadDispatch } from "./remote-dem-manager";
 import { CancelablePromise, DemTile, Encoding } from "./types";
+import PNG from 'png-ts';
+
 
 let offscreenCanvas: OffscreenCanvas;
 let offscreenContext: OffscreenCanvasRenderingContext2D | null;
@@ -100,6 +102,55 @@ function isWorker(): boolean {
   );
 }
 
+function isNodeJs(): boolean {
+  return (typeof window === 'undefined');
+}
+
+
+
+function decodeImageNode(
+  blob: Blob,
+  encoding: Encoding,
+): CancelablePromise<DemTile> {
+
+  const value = (async () => {
+    const arrayBuffer = await blob.arrayBuffer();
+    const uint8View = new Uint8Array(arrayBuffer);
+    let png = PNG.load(uint8View);
+    // console.log(png);
+    return  {
+      "width": png.width,
+      "height": png.height,
+      "pixels": png.decodePixels()
+    };
+  })().then( (pngStuff) => {
+    let pixels = new Uint8ClampedArray(pngStuff["pixels"]);
+    return decodeParsedImage(pngStuff["width"], pngStuff["height"], encoding, pixels);
+  });
+
+  let canceled = false;
+  // const img: HTMLImageElement = new Image();
+  // const value = new Promise<HTMLImageElement>((resolve, reject) => {
+  //   img.onload = () => {
+  //     if (!canceled) resolve(img);
+  //     URL.revokeObjectURL(img.src);
+  //     img.onload = null;
+  //   };
+  //   img.onerror = () => reject(new Error("Could not load image."));
+  //   img.src = blob.size ? URL.createObjectURL(blob) : "";
+  // }).then((img: HTMLImageElement) =>
+  //   getElevations(img, encoding, canvas, canvasContext),
+  // );
+  // console.log(value);
+  return {
+    value,
+    cancel: () => {
+      canceled = true;
+      // img.src = "";
+    },
+  };
+}
+
 const defaultDecoder: (
   blob: Blob,
   encoding: Encoding,
@@ -107,6 +158,8 @@ const defaultDecoder: (
   ? decodeImageModern
   : isWorker()
   ? decodeImageOnMainThread
+  : isNodeJs()
+  ? decodeImageNode
   : decodeImageOld;
 
 export default defaultDecoder;

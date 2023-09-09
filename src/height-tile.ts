@@ -16,6 +16,7 @@ export class HeightTile {
     height: number,
     get: (x: number, y: number) => number,
   ) {
+    // console.log("get = " + get);
     this.get = get;
     this.width = width;
     this.height = height;

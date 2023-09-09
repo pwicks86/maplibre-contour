@@ -3,6 +3,7 @@ import typescript from "@rollup/plugin-typescript";
 import terser from "@rollup/plugin-terser";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
+import nodePolyfills from 'rollup-plugin-polyfill-node';
 
 export const nodeResolve = resolve({
   browser: true,
@@ -35,7 +36,7 @@ export default [
       throw message;
     },
     treeshake: true,
-    plugins: [nodeResolve, typescript(), commonjs()],
+    plugins: [nodeResolve, nodePolyfills(), typescript(), commonjs()],
   },
   create("dist/index.cjs", "cjs"),
   create("dist/index.mjs", "esm"),

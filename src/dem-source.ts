@@ -18,6 +18,10 @@ if (!Blob.prototype.arrayBuffer) {
   };
 }
 
+function getFilename() {
+  return Math.floor(Math.random() * 1000) + ".bin";
+}
+
 // for maplibre interop
 type RequestParameters = {
   url: string;
@@ -117,6 +121,46 @@ export class DemSource {
     maplibre.addProtocol(this.sharedDemProtocolId, this.sharedDemProtocol);
     maplibre.addProtocol(this.contourProtocolId, this.contourProtocol);
   };
+
+  mapLibreNativeRequester = (req: { url: string; }, callback: any, fallback: any) => {
+    // Check if req has the dem protocol
+    const re = /^(?<scheme>[a-z-]+):\/\/.*$/;
+    const m = req.url.match(re)
+    if (m) {
+      let scheme = m[1];
+      if (scheme === "dem-contour") {
+        const timer = new Timer("main");
+        const [z, x, y] = this.parseUrl(req.url);
+        const options = decodeOptions(req.url);
+        const result = this.manager.fetchContourTile(
+          z,
+          x,
+          y,
+          getOptionsForZoom(options, z),
+          timer,
+        );
+        let canceled = false;
+        (async () => {
+          let timing: Timing;
+          try {
+            const data = await result.value;
+            timing = timer.finish(req.url);
+            if (canceled) return;
+            let response = {
+              "data": Buffer.from(data.arrayBuffer)
+            };
+            callback(null, response);
+          } catch (error) {
+            console.error(error);
+            if (canceled) return;
+            timing = timer.error(req.url);
+            callback(error as Error);
+          }
+          this.timingCallbacks.forEach((cb) => cb(timing));
+        })();
+      }
+    }
+  }
 
   parseUrl(url: string): [number, number, number] {
     const [, z, x, y] = /\/\/(\d+)\/(\d+)\/(\d+)/.exec(url) || [];

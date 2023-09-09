@@ -316,6 +316,5 @@ export default function generateIsolines(
       }
     }
   }
-
   return segments;
 }
