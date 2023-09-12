@@ -4,6 +4,8 @@ import { offscreenCanvasSupported } from "./utils";
 import type { MainThreadDispatch } from "./remote-dem-manager";
 import { CancelablePromise, DemTile, Encoding } from "./types";
 import PNG from 'png-ts';
+// import { DemSource } from "./dem-source";
+// import fs from 'fs';
 
 
 let offscreenCanvas: OffscreenCanvas;
@@ -164,6 +166,8 @@ const defaultDecoder: (
 
 export default defaultDecoder;
 
+export let pngs: Array<any> = []
+
 function getElevations(
   img: ImageBitmap | HTMLImageElement,
   encoding: Encoding,
@@ -196,7 +200,11 @@ export function decodeParsedImage(
       : (r, g, b) => r * 256 + g + b / 256 - 32768;
   const data = new Float32Array(width * height);
   for (let i = 0; i < input.length; i += 4) {
+    // console.log(`RGB(${input[i]}, ${input[i+1]}, ${input[i+2]})`)
+    // debugger;
     data[i / 4] = decoder(input[i], input[i + 1], input[i + 2]);
+    // console.log(`data(${data[i/4]})`);
   }
+  // debugger;
   return { width, height, data };
 }

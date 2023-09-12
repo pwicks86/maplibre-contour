@@ -1,12 +1,13 @@
 import generateIsolines from "./isolines";
 import { DemSource } from "./dem-source";
-import { decodeParsedImage } from "./decode-image";
+import { pngs, decodeParsedImage } from "./decode-image";
 import { LocalDemManager } from "./dem-manager";
 import CONFIG from "./config";
 import { HeightTile } from "./height-tile";
 
 const exported = {
   generateIsolines,
+  pngs,
   DemSource,
   HeightTile,
   LocalDemManager,

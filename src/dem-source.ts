@@ -55,6 +55,7 @@ export class DemSource {
   manager: DemManager;
   sharedDemProtocolUrl: string;
   timingCallbacks: Array<(timing: Timing) => void> = [];
+  static pngs: Array<any> = [];
 
   constructor({
     url,
@@ -158,6 +159,8 @@ export class DemSource {
           }
           this.timingCallbacks.forEach((cb) => cb(timing));
         })();
+      } else {
+        console.log("Got other scheme: " + scheme);
       }
     }
   }

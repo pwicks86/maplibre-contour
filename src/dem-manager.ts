@@ -45,6 +45,7 @@ export interface DemManager {
  * Caches, decodes, and processes raster tiles in the current thread.
  */
 export class LocalDemManager implements DemManager {
+  static pngs: Array<any> = [];
   tileCache: AsyncCache<string, FetchResponse>;
   parsedCache: AsyncCache<string, DemTile>;
   contourCache: AsyncCache<string, ContourTile>;
@@ -132,6 +133,8 @@ export class LocalDemManager implements DemManager {
       return {
         value: tile.value.then(async (response) => {
           if (canceled) throw new Error("canceled");
+          // console.log("response.data = "+ response.data);
+          // LocalDemManager.pngs.push(await response.data.arrayBuffer());
           const result = self.decodeImage(response.data, self.encoding);
           alsoCancel = result.cancel;
           const mark = timer?.marker("decode");
